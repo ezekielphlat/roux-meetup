@@ -9,6 +9,8 @@ const feedbackService = new FeedbackService('./data/feedback.json');
 const speakersService = new SpeakersService('./data/speakers.json');
 
 const routes = require('./routes');
+const { response } = require('express');
+const { resolve } = require('path');
 
 const app = express();
 
@@ -23,8 +25,20 @@ app.use(
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, './views'));
-
+app.locals.siteName = 'ROUX Meetups';
 app.use(express.static(path.join(__dirname, './static')));
+
+// set locals for request object. this variable will be available for all requests
+app.use(async (request, response, next) => {
+  try {
+    const names = await speakersService.getNames();
+    response.locals.speakerNames = names;
+    console.log(response.locals);
+    return next();
+  } catch (err) {
+    return next(err);
+  }
+});
 
 app.use('/', routes({ feedbackService, speakersService }));
 
